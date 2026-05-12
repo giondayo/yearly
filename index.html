@@ -387,7 +387,7 @@ function render(){
     phrow.style.overflow="hidden";
 
     const la=el("div","labl");
-    la.style.cssText=`width:${LW}px;padding-right:8px;${grouped?'padding-left:10px;':''}`;
+    la.style.cssText=`width:${LW}px;padding-right:8px;${grouped?'padding-left:15px;':''}`;
     const ln=el("div","lname");
     ln.textContent=row.name;
     ln.addEventListener("click",()=>openEdit('row',row.id,row.name));
@@ -500,6 +500,11 @@ function render(){
 
   // Ungrouped rows
   const ungrouped=S.rows.filter(r=>!r.groupId||!groupIds.has(r.groupId));
+  if(ungrouped.length && groups.length){
+    const sep=el("div");
+    sep.style.cssText=`border-top:1.5px solid #c0a870;`;
+    phrwrap.appendChild(sep);
+  }
   ungrouped.forEach(row=>{
     phrwrap.appendChild(buildPhrow(row,false));
   });
