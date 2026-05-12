@@ -379,7 +379,7 @@ function render(){
 
   const phrwrap=el("div");
 
-  function buildPhrow(row){
+  function buildPhrow(row,grouped){
     const ro=S.obs[row.id]||{};
     const phrow=el("div","phrow");
     phrow.dataset.rowId=row.id;
@@ -387,7 +387,7 @@ function render(){
     phrow.style.overflow="hidden";
 
     const la=el("div","labl");
-    la.style.cssText=`width:${LW}px;padding-right:8px;`;
+    la.style.cssText=`width:${LW}px;padding-right:8px;${grouped?'padding-left:10px;':''}`;
     const ln=el("div","lname");
     ln.textContent=row.name;
     ln.addEventListener("click",()=>openEdit('row',row.id,row.name));
@@ -493,7 +493,7 @@ function render(){
     phrwrap.appendChild(buildGhdr(grp));
     if(!grp.collapsed){
       S.rows.filter(r=>r.groupId===grp.id).forEach(row=>{
-        phrwrap.appendChild(buildPhrow(row));
+        phrwrap.appendChild(buildPhrow(row,true));
       });
     }
   });
@@ -501,7 +501,7 @@ function render(){
   // Ungrouped rows
   const ungrouped=S.rows.filter(r=>!r.groupId||!groupIds.has(r.groupId));
   ungrouped.forEach(row=>{
-    phrwrap.appendChild(buildPhrow(row));
+    phrwrap.appendChild(buildPhrow(row,false));
   });
 
   stripewrap.appendChild(phrwrap);
