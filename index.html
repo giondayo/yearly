@@ -133,7 +133,7 @@ textarea.sinput{font-size:12px;font-family:monospace;height:90px;resize:none;}
       </div>
       <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;">
         <span style="font-size:11px;color:#8a7050;white-space:nowrap;">Row height</span>
-        <input type="range" id="rh-slider" min="12" max="32" value="32" step="1"
+        <input type="range" id="rh-slider" min="0" max="30" value="16" step="1"
           style="width:72px;accent-color:#4A7C3F;">
       </div>
     </div>
@@ -145,7 +145,7 @@ textarea.sinput{font-size:12px;font-family:monospace;height:90px;resize:none;}
   </div>
 
   <div id="ftr">
-    <button class="fbtn" id="btn-row">+ Observation</button>
+    <button class="fbtn" id="btn-row">+ Row</button>
     <button class="fbtn" id="btn-year">+ Year</button>
     <button class="fbtn" id="btn-bak">Backup / Restore</button>
   </div>
@@ -183,7 +183,7 @@ textarea.sinput{font-size:12px;font-family:monospace;height:90px;resize:none;}
 
 // ── Constants ─────────────────────────────────────────────
 const CW=16, LW=150, YLW=44;
-let YH=32;
+let sliderN=16;
 const MONTHS=[
   {n:"Jan",s:1},{n:"Feb",s:5},{n:"Mar",s:9},{n:"Apr",s:14},
   {n:"May",s:18},{n:"Jun",s:22},{n:"Jul",s:27},{n:"Aug",s:31},
@@ -200,7 +200,7 @@ const DEF={
     {id:5,name:"Chanterelles"},{id:6,name:"Leaves turning"},
     {id:7,name:"First hard frost"},{id:8,name:"Ice on lakes"}
   ],
-  years:[TY-1,TY],obs:{},nextId:9
+  years:[TY],obs:{},nextId:9
 };
 let S;
 
@@ -247,20 +247,30 @@ function render(){
     wc.textContent=w;
     wrow.appendChild(wc);
   }
-  grid.appendChild(wrow);
-
   const nowWeek=isoWeek();
-  const rpad=Math.max(1,Math.round(YH/7));
+  const phrowH=16*S.years.length+sliderN;
+  const laneH=phrowH/S.years.length;
   const tyIdx=S.years.indexOf(TY);
   const todayBg=hexRgba(COLORS[tyIdx>=0?tyIdx%COLORS.length:0],0.14);
+  const pw0=LW+YLW;
+  const ptodayX=pw0+(nowWeek-1)*CW;
+  const stripewrap=el("div");
+  stripewrap.style.backgroundImage=`linear-gradient(${todayBg},${todayBg}),linear-gradient(90deg,#EDE8DC ${pw0}px,transparent ${pw0}px),repeating-linear-gradient(90deg,transparent,transparent ${CW}px,rgba(0,0,0,0.04) ${CW}px,rgba(0,0,0,0.04) ${CW*2}px)`;
+  stripewrap.style.backgroundSize=`${CW}px 100%,100% 100%,${CW*2}px 100%`;
+  stripewrap.style.backgroundPosition=`${ptodayX}px 0,0 0,${pw0}px 0`;
+  stripewrap.style.backgroundRepeat=`no-repeat,no-repeat,repeat-x`;
+  stripewrap.appendChild(wrow);
+  const phrwrap=el("div");
 
   S.rows.forEach((row,ri)=>{
     const ro=S.obs[row.id]||{};
     const phrow=el("div","phrow");
+    phrow.style.height=phrowH+"px";
+    phrow.style.overflow="hidden";
 
     // Label
     const la=el("div","labl");
-    la.style.cssText=`width:${LW}px;padding:${rpad}px 8px ${rpad}px 0;`;
+    la.style.cssText=`width:${LW}px;padding:0 8px 0 0;`;
     const ln=el("div","lname");
     ln.textContent=row.name;
     ln.addEventListener("click",()=>openEdit(row.id,row.name));
@@ -278,12 +288,12 @@ function render(){
 
     // Year lanes
     const lanes=el("div","lanes");
-    lanes.style.cssText=`padding:${rpad}px 0;`;
+    lanes.style.cssText=``;
     S.years.forEach((year,yi)=>{
       const marked=ro[year];
       const color=COLORS[yi%COLORS.length];
       const lane=el("div","lane");
-      lane.style.height=YH+"px";
+      lane.style.height=laneH+"px";
       const yl=el("div","ylbl");
       yl.style.cssText=`width:${YLW}px;color:${color};`;
       yl.textContent=year;
@@ -291,10 +301,8 @@ function render(){
 
       for(let w=1;w<=52;w++){
         const cell=el("div","wcell");
-        const isToday=w===nowWeek;
-        if(isToday) cell.classList.add("today-col");
-        const cellBg=isToday?todayBg:w%2===0?'rgba(0,0,0,0.04)':'transparent';
-        cell.style.cssText=`width:${CW}px;height:${YH}px;background:${cellBg};`;
+        if(w===nowWeek) cell.classList.add("today-col");
+        cell.style.cssText=`width:${CW}px;height:${laneH}px;`;
         if(marked===w){
           const dot=el("div","wdot");
           dot.style.cssText=`width:11px;height:11px;background:${color};`;
@@ -313,8 +321,10 @@ function render(){
       lanes.appendChild(lane);
     });
     phrow.appendChild(lanes);
-    grid.appendChild(phrow);
+    phrwrap.appendChild(phrow);
   });
+  stripewrap.appendChild(phrwrap);
+  grid.appendChild(stripewrap);
 
   requestAnimationFrame(()=>{ gw.scrollLeft=sx; });
 }
@@ -328,6 +338,18 @@ function renderLegend(){
     dot.style.background=COLORS[i%COLORS.length];
     d.appendChild(dot);
     d.appendChild(document.createTextNode(y));
+    const xb=el("button","xbtn");
+    xb.textContent="×";
+    xb.style.cssText="font-size:14px;padding:0 2px;color:#bfaa80;";
+    xb.addEventListener("click",()=>{
+      if(S.years.length<=1){alert("At least one year is required.");return;}
+      if(confirm(`Remove ${y} and all its observations?`)){
+        S.years=S.years.filter(yr=>yr!==y);
+        Object.keys(S.obs).forEach(id=>{delete S.obs[id][y];});
+        save();render();
+      }
+    });
+    d.appendChild(xb);
     leg.appendChild(d);
   });
 }
@@ -437,7 +459,7 @@ if("serviceWorker" in navigator){
 
 // ── Row height slider ─────────────────────────────────────
 document.getElementById("rh-slider").addEventListener("input",function(){
-  YH=parseInt(this.value);
+  sliderN=parseInt(this.value);
   render();
   const gw=document.getElementById("gwrap");
   requestAnimationFrame(()=>{ gw.scrollLeft=gw.scrollLeft; });
