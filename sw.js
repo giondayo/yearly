@@ -1,4 +1,4 @@
-const CACHE = "phenology-v1";
+const CACHE = "phenology-v2";
 
 self.addEventListener("install", e => {
   e.waitUntil(
