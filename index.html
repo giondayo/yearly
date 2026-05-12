@@ -28,8 +28,8 @@ body{
   background:#EDE8DC;
   border-bottom:1px solid #c8b888;
 }
-#hdr h1{font-size:19px;font-weight:600;letter-spacing:0.01em;margin-bottom:2px;}
-#hdr .sub{font-size:11px;color:#8a7050;}
+#hdr h1{font-size:19px;font-weight:600;letter-spacing:0.01em;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#hdr .sub{font-size:11px;color:#8a7050;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* Scrollable body */
 #body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -127,7 +127,7 @@ textarea.sinput{font-size:12px;font-family:monospace;height:90px;resize:none;}
 <div id="app">
   <div id="hdr">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div>
+      <div style="min-width:0;">
         <h1>Phenology Record</h1>
         <div class="sub">Tap a week to mark · tap a name to rename · × to delete a row</div>
       </div>
