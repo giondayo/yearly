@@ -336,11 +336,14 @@ function render(){
   const pw0=LW+YLW;
   const nowWeek=isoWeek();
   const ptodayX=pw0+(nowWeek-1)*CW;
+  // Cache for fast touch-resize updates
+  _rTodayBg=todayBg; _rNowWeek=nowWeek;
 
   // Month header row
   const mrow=el("div","mrow");
   mrow.style.alignItems="flex-end";
   const mlabl=el("div");
+  mlabl.id="_mlabl";
   mlabl.style.cssText=`width:${LW}px;flex-shrink:0;display:flex;justify-content:flex-end;align-items:flex-end;border-bottom:1px solid #c0a870;padding-bottom:4px;margin-top:8px;`;
   const rz=el("div","resizer");
   rz.textContent="⇔";
@@ -362,6 +365,7 @@ function render(){
 
   // Week row + all rows inside stripewrap
   const wrow=el("div","mrow");
+  wrow.id="_wrow";
   wrow.style.marginLeft=(LW+YLW)+"px";
   for(let w=1;w<=52;w++){
     const wc=el("div");
@@ -371,6 +375,7 @@ function render(){
   }
 
   const stripewrap=el("div");
+  stripewrap.id="_stripewrap";
   stripewrap.style.backgroundImage=`linear-gradient(${todayBg},${todayBg}),linear-gradient(90deg,#EDE8DC ${pw0}px,transparent ${pw0}px),repeating-linear-gradient(90deg,transparent,transparent ${CW}px,rgba(0,0,0,0.04) ${CW}px,rgba(0,0,0,0.04) ${CW*2}px)`;
   stripewrap.style.backgroundSize=`${CW}px 100%,100% 100%,${CW*2}px 100%`;
   stripewrap.style.backgroundPosition=`${ptodayX}px 0,0 0,${pw0}px 0`;
@@ -445,7 +450,7 @@ function render(){
     const ghdr=el("div","ghdr");
     ghdr.dataset.gid=grp.id;
 
-    const left=el("div");
+    const left=el("div","ghdr-left");
     left.style.cssText=`width:${LW}px;flex-shrink:0;display:flex;align-items:center;min-width:0;overflow:hidden;`;
 
     const grip=el("div","ghdr-grip");
@@ -831,6 +836,9 @@ function endDragGroup(){
 
 // ── Label column resize ───────────────────────────────────
 let _resizing=false,_rx=0,_rLW=0,_rafPending=false;
+// Cached render state for fast touch updates
+let _rTodayBg='',_rNowWeek=1;
+
 function startResize(e){
   _resizing=true;_rx=e.clientX;_rLW=LW;
   e.currentTarget.classList.add("active");
@@ -844,10 +852,9 @@ function startResizeTouch(e){
   document.addEventListener("touchend",stopResize);
   e.preventDefault();
 }
-function doResize(e){if(!_resizing)return;applyResize(e.clientX);}
-function doResizeTouch(e){if(!_resizing)return;applyResize(e.touches[0].clientX);e.preventDefault();}
-function applyResize(clientX){
-  LW=Math.max(50,_rLW+(clientX-_rx));
+function doResize(e){
+  if(!_resizing)return;
+  LW=Math.max(50,_rLW+(e.clientX-_rx));
   if(!_rafPending){
     _rafPending=true;
     requestAnimationFrame(()=>{
@@ -859,6 +866,37 @@ function applyResize(clientX){
     });
   }
 }
+function doResizeTouch(e){
+  if(!_resizing)return;
+  LW=Math.max(50,_rLW+(e.touches[0].clientX-_rx));
+  if(!_rafPending){
+    _rafPending=true;
+    requestAnimationFrame(()=>{
+      _rafPending=false;
+      _fastResizeUpdate();
+    });
+  }
+  e.preventDefault();
+}
+// Updates only the width-sensitive elements without rebuilding the grid
+function _fastResizeUpdate(){
+  const pw0=LW+YLW;
+  const ptodayX=pw0+(_rNowWeek-1)*CW;
+  const mlabl=document.getElementById('_mlabl');
+  if(mlabl) mlabl.style.width=LW+'px';
+  document.querySelectorAll('.labl').forEach(la=>{
+    const grouped=la.style.paddingLeft==='15px';
+    la.style.width=LW+'px';
+  });
+  document.querySelectorAll('.ghdr-left').forEach(d=>d.style.width=LW+'px');
+  const wrow=document.getElementById('_wrow');
+  if(wrow) wrow.style.marginLeft=pw0+'px';
+  const sw=document.getElementById('_stripewrap');
+  if(sw){
+    sw.style.backgroundImage=`linear-gradient(${_rTodayBg},${_rTodayBg}),linear-gradient(90deg,#EDE8DC ${pw0}px,transparent ${pw0}px),repeating-linear-gradient(90deg,transparent,transparent ${CW}px,rgba(0,0,0,0.04) ${CW}px,rgba(0,0,0,0.04) ${CW*2}px)`;
+    sw.style.backgroundPosition=`${ptodayX}px 0,0 0,${pw0}px 0`;
+  }
+}
 function stopResize(){
   _resizing=false;
   document.querySelectorAll(".resizer").forEach(r=>r.classList.remove("active"));
@@ -866,6 +904,11 @@ function stopResize(){
   document.removeEventListener("mouseup",stopResize);
   document.removeEventListener("touchmove",doResizeTouch);
   document.removeEventListener("touchend",stopResize);
+  // Full render on release to ensure everything is consistent
+  const gw=document.getElementById("gwrap");
+  const sx=gw.scrollLeft;
+  render();
+  requestAnimationFrame(()=>{ gw.scrollLeft=sx; });
 }
 
 // ── Row height slider ─────────────────────────────────────
