@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Phenology">
 <meta name="theme-color" content="#4A7C3F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plaster&display=swap" rel="stylesheet">
 <title>Yearly</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -28,8 +31,7 @@ body{
   background:#EDE8DC;
   border-bottom:1px solid #c8b888;
 }
-#hdr h1{font-size:20px;font-weight:normal;letter-spacing:0.04em;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic;}
-#hdr .sub{font-size:11px;color:#8a7050;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Georgia,'Palatino Linotype',Palatino,serif;letter-spacing:0.02em;}
+#hdr h1{font-family:'Plaster',Georgia,serif;font-size:40px;font-weight:normal;font-style:normal;color:#bfaa80;letter-spacing:0.03em;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* Scrollable body */
 #body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -202,8 +204,7 @@ textarea.sinput{font-size:12px;font-family:monospace;height:90px;resize:none;fon
   <div id="hdr">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div style="min-width:0;">
-        <h1>Phenology Record</h1>
-        <div class="sub">Tap a week to mark · tap a name to rename · × to delete a row</div>
+        <h1>Yearly</h1>
       </div>
       <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;">
         <span style="font-size:11px;color:#8a7050;white-space:nowrap;">Row height</span>
